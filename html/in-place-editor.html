@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>attr order</title>
+    <script src="jquery/jquery-2.1.4.min.js"></script>
+
+    <style type="text/css">
+        .form {
+            width: 100%;
+        }
+
+        .editable {
+            border: 1px solid #F8F3FF;
+        }
+
+
+        .editBox {
+            width: 326px;
+            min-height: 20px;
+            padding: 10px 15px;
+            background-color: #fff;
+            border: 2px solid #E8F3FF;
+        }
+
+        .noPad {
+            padding: 0;
+            width: 360px;
+        }
+
+        .editHover {
+            background-color: #E8F3FF;
+        }
+
+        .save_it {
+            display: none;
+        }
+
+        .save_it_visible {
+        }
+
+        .cell {
+            display: none;
+        }
+
+        .cell_visible {}
+
+        .ok_img {
+            background: url('icons/yes-no-eye-map.png') no-repeat;
+            background-position: 0px 0px;
+            background-size: 92px 16px;
+        }
+
+        .cancel_img {
+            background: url('icons/yes-no-eye-map.png') no-repeat;
+            background-position: -26px 0px;
+            background-size: 92px 16px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class='editable' editor_type='LABEL'>
+    <div class="form save_it">
+        <input class="editBox" name="label">
+    </div>
+    <div class='cell_visible'>[LABEL] Some text</div>
+</div>
+<div class='editable' editor_type='INPUT'>
+    <div class="form save_it">
+        <input class="editBox" name="input">
+    </div>
+    <div class='cell_visible'>[INPUT] Some text</div>
+</div>
+<div class='editable' editor_type='TEXTAREA'>
+    <div class="form save_it">
+        <textarea class="editBox" name="textarea"></textarea>
+    </div>
+    <div class='cell_visible'>[TEXTAREA] Some text</div>
+</div>
+<div class='editable' editor_type='BOOLEAN'>
+    <div class="form save_it">
+        <input class="editBox" type="checkbox" name="chekbox">
+    </div>
+    <div class='cell_visible'>Yes</div>
+</div>
+<div class='editable' editor_type='PASSWORD'>
+    <div class="form save_it">
+        <input class="editBox" type="password" name="old_password"><br>
+        <input class="editBox" type="password" name="new1_password"><br>
+        <input class="editBox" type="password" name="new2_password">
+    </div>
+    <div class='cell_visible'>***</div>
+</div>
+<div class='editable'  editor_type='DROPDOWN'>
+    <div class="form save_it">
+        <select class="editBox" name="dropdown">
+            <option value="LABEL">Label - Do not change</option>
+            <option value="INPUT">Input string or number</option>
+            <option value="TEXTAREA">A lot of text</option>
+            <option value="BOOLEAN">Yes or No</option>
+            <option value="PASSWORD">Password</option>
+            <option value="DROPDOWN">FK or List of values</option>
+        </select>
+    </div>
+
+    <div class='cell_visible'>Yes or No</div>
+</div>
+
+<script>
+    function getBooleanAsString(b) {
+        if (b) {
+            return 'Yes';
+        }
+
+        return 'No';
+    }
+
+    function getBooleanByString(s) {
+        if (s === 'Yes') {
+            return true;
+        }
+        if (s === 'No') {
+            return false;
+        }
+
+        return undefined;
+    }
+
+
+    function keyUp(el, event) {
+        if (event.keyCode === 27) {
+            el.value = '';
+        }
+
+        if (event.keyCode === 13) {
+            alert(el.value);
+        }
+    }
+
+    function edit(event) {
+        var el = event.currentTarget;
+        jQuery(el).unbind('dblclick', edit);
+
+        var type = jQuery(el).attr('editor_type');
+        if (type == 'LABEL') {
+            return;
+        }
+
+        jQuery(el).children('.save_it').removeClass('save_it').addClass('save_it_visible');
+        jQuery(el).children('.cell_visible').removeClass('cell_visible').addClass('cell');
+
+        var val = jQuery(el).children('.cell').text();
+
+        switch(type) {
+            case 'INPUT':
+                jQuery(el).children('.form').children('.editBox').val(val);
+                break;
+            case 'TEXTAREA':
+                jQuery(el).children('.form').children('.editBox').val(val);
+                break;
+            case 'BOOLEAN':
+                jQuery(el).children('.form').children('.editBox').prop('checked', getBooleanByString(val));
+                break;
+            case 'PASSWORD':
+                break;
+            case 'DROPDOWN':
+                jQuery("select option").filter(function() {
+                    //may want to use $.trim in here
+                    return jQuery(this).text() == val;
+                }).prop('selected', true);
+                break;
+            default:
+                break;
+        }
+
+        var btns = '<div class="btns" style="width:40px;height:16px;margin-left: auto;margin-right: auto;">'
+                        + '<div class="ok_img" style="width:16px;height:16px;float:left;margin-right:4px;"></div>'
+                        + '<div class="cancel_img" style="width:16px;height:16px;float:right;margin-left:4px;"></div>'
+                    + '</div>';
+
+        jQuery(el)
+                .children(".cell")
+                .addClass("noPad")
+                .after(btns);
+
+        jQuery(el).on("click", ".ok_img",
+                function()
+                {
+                    jQuery(el).off("click", ".ok_img");
+                    var new_value;
+                    switch(type) {
+                        case 'INPUT':
+                            new_value = jQuery(el).children('.form').children('.editBox').val();
+                            break;
+                        case 'TEXTAREA':
+                            new_value = jQuery(el).children('.form').children('.editBox').val();
+                            break;
+                        case 'BOOLEAN':
+                            new_value = jQuery(el).children('.form').children('.editBox').prop('checked');
+                            new_value = getBooleanAsString(new_value);
+                            break;
+                        case 'PASSWORD':
+                            new_value = '***';
+                            break;
+                        case 'DROPDOWN':
+                            new_value = jQuery(el).children('.form').children('.editBox').find('option:selected').text();
+                            break;
+                        default:
+                            break;
+                    }
+                    jQuery(el).find('.cell').text(new_value);
+                    jQuery(el).children(".cell").removeClass("noPad");
+                    jQuery(el).children(".btns").remove();
+                    jQuery(el).children('.save_it_visible').removeClass('save_it_visible').addClass('save_it');
+                    jQuery(el).children('.cell').removeClass('cell').addClass('cell_visible');
+
+                    jQuery(el).bind('dblclick', edit);
+
+                }
+        );
+
+        jQuery(el).on("click", ".cancel_img",
+                function()
+                {
+                    jQuery(el).off("click", ".cancel_img")
+
+                    jQuery(el).find(".cell").text(val);
+                    jQuery(el).children(".cell").removeClass("noPad");
+                    jQuery(el).children(".btns").remove();
+                    jQuery(el).children('.save_it_visible').removeClass('save_it_visible').addClass('save_it');
+                    jQuery(el).children('.cell').removeClass('cell').addClass('cell_visible');
+
+                    jQuery(el).bind('dblclick', edit);
+                }
+        );
+    }
+
+    jQuery(document).ready(function() {
+        jQuery(".editable")
+                .bind('dblclick', edit)
+                .hover
+        (
+                function() { jQuery(this).addClass("editHover"); },
+                function() { jQuery(this).removeClass("editHover"); }
+        );
+    });
+</script>
+</body>
+</html>
