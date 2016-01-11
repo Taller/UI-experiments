@@ -33,17 +33,11 @@
         }
 
         .save_it {
-            display: none;
-        }
-
-        .save_it_visible {
         }
 
         .cell {
-            display: none;
         }
 
-        .cell_visible {}
 
         .ok_img {
             background: url('icons/yes-no-eye-map.png') no-repeat;
@@ -65,25 +59,25 @@
     <div class="form save_it">
         <input class="editBox" name="label">
     </div>
-    <div class='cell_visible'>[LABEL] Some text</div>
+    <div class='cell'>[LABEL] Some text</div>
 </div>
 <div class='editable' editor_type='INPUT'>
     <div class="form save_it">
         <input class="editBox" name="input">
     </div>
-    <div class='cell_visible'>[INPUT] Some text</div>
+    <div class='cell'>[INPUT] Some text</div>
 </div>
 <div class='editable' editor_type='TEXTAREA'>
     <div class="form save_it">
         <textarea class="editBox" name="textarea"></textarea>
     </div>
-    <div class='cell_visible'>[TEXTAREA] Some text</div>
+    <div class='cell'>[TEXTAREA] Some text</div>
 </div>
 <div class='editable' editor_type='BOOLEAN'>
     <div class="form save_it">
         <input class="editBox" type="checkbox" name="chekbox">
     </div>
-    <div class='cell_visible'>Yes</div>
+    <div class='cell'>Yes</div>
 </div>
 <div class='editable' editor_type='PASSWORD'>
     <div class="form save_it">
@@ -91,7 +85,7 @@
         <input class="editBox" type="password" name="new1_password"><br>
         <input class="editBox" type="password" name="new2_password">
     </div>
-    <div class='cell_visible'>***</div>
+    <div class='cell'>***</div>
 </div>
 <div class='editable'  editor_type='DROPDOWN'>
     <div class="form save_it">
@@ -105,7 +99,7 @@
         </select>
     </div>
 
-    <div class='cell_visible'>Yes or No</div>
+    <div class='cell'>Yes or No</div>
 </div>
 
 <script>
@@ -141,15 +135,15 @@
 
     function edit(event) {
         var el = event.currentTarget;
-        jQuery(el).unbind('dblclick', edit);
+        jQuery(el).off('dblclick');
 
         var type = jQuery(el).attr('editor_type');
         if (type == 'LABEL') {
             return;
         }
 
-        jQuery(el).children('.save_it').removeClass('save_it').addClass('save_it_visible');
-        jQuery(el).children('.cell_visible').removeClass('cell_visible').addClass('cell');
+        jQuery(el).children('.save_it').show();
+        jQuery(el).children('.cell').hide();
 
         var val = jQuery(el).children('.cell').text();
 
@@ -185,56 +179,58 @@
                 .addClass("noPad")
                 .after(btns);
 
-        jQuery(el).on("click", ".ok_img",
-                function()
-                {
-                    jQuery(el).off("click", ".ok_img");
-                    var new_value;
-                    switch(type) {
-                        case 'INPUT':
-                            new_value = jQuery(el).children('.form').children('.editBox').val();
-                            break;
-                        case 'TEXTAREA':
-                            new_value = jQuery(el).children('.form').children('.editBox').val();
-                            break;
-                        case 'BOOLEAN':
-                            new_value = jQuery(el).children('.form').children('.editBox').prop('checked');
-                            new_value = getBooleanAsString(new_value);
-                            break;
-                        case 'PASSWORD':
-                            new_value = '***';
-                            break;
-                        case 'DROPDOWN':
-                            new_value = jQuery(el).children('.form').children('.editBox').find('option:selected').text();
-                            break;
-                        default:
-                            break;
-                    }
-                    jQuery(el).find('.cell').text(new_value);
-                    jQuery(el).children(".cell").removeClass("noPad");
-                    jQuery(el).children(".btns").remove();
-                    jQuery(el).children('.save_it_visible').removeClass('save_it_visible').addClass('save_it');
-                    jQuery(el).children('.cell').removeClass('cell').addClass('cell_visible');
+        jQuery(el).find('.ok_img').on('click', {el : el, type : type}, okPressed);
 
-                    jQuery(el).bind('dblclick', edit);
+        jQuery(el).find('.cancel_img').on('click', {val : val, el : el}, cancelPressed);
+    }
 
-                }
-        );
+    function okPressed(event) {
+        var el = event.data.el;
+        var type = event.data.type;
+        jQuery(el).off("click", ".ok_img");
+        var new_value;
+        switch(type) {
+            case 'INPUT':
+                new_value = jQuery(el).children('.form').children('.editBox').val();
+                break;
+            case 'TEXTAREA':
+                new_value = jQuery(el).children('.form').children('.editBox').val();
+                break;
+            case 'BOOLEAN':
+                new_value = jQuery(el).children('.form').children('.editBox').prop('checked');
+                new_value = getBooleanAsString(new_value);
+                break;
+            case 'PASSWORD':
+                new_value = '***';
+                break;
+            case 'DROPDOWN':
+                new_value = jQuery(el).children('.form').children('.editBox').find('option:selected').text();
+                break;
+            default:
+                break;
+        }
+        jQuery(el).children('.cell').text(new_value);
+        jQuery(el).children('.cell').removeClass("noPad");
+        jQuery(el).children('.btns').remove();
+        jQuery(el).children('.save_it').hide();
+        jQuery(el).children('.cell').show();
 
-        jQuery(el).on("click", ".cancel_img",
-                function()
-                {
-                    jQuery(el).off("click", ".cancel_img")
+        jQuery(el).on('dblclick', edit);
 
-                    jQuery(el).find(".cell").text(val);
-                    jQuery(el).children(".cell").removeClass("noPad");
-                    jQuery(el).children(".btns").remove();
-                    jQuery(el).children('.save_it_visible').removeClass('save_it_visible').addClass('save_it');
-                    jQuery(el).children('.cell').removeClass('cell').addClass('cell_visible');
+    }
 
-                    jQuery(el).bind('dblclick', edit);
-                }
-        );
+    function cancelPressed(event) {
+        var el = event.data.el;
+        var val = event.data.val;
+        jQuery(el).off("click", ".cancel_img");
+
+        jQuery(el).children('.cell').text(val);
+        jQuery(el).children('.cell').removeClass("noPad");
+        jQuery(el).children('.btns').remove();
+        jQuery(el).children('.save_it').hide();
+        jQuery(el).children('.cell').show();
+
+        jQuery(el).on('dblclick', edit);
     }
 
     jQuery(document).ready(function() {
@@ -244,7 +240,10 @@
         (
                 function() { jQuery(this).addClass("editHover"); },
                 function() { jQuery(this).removeClass("editHover"); }
-        );
+        )
+                .children('.save_it').hide()
+                .children('.cell').show();
+
     });
 </script>
 </body>
